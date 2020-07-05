@@ -1,0 +1,152 @@
+import sys
+import copy
+
+
+f = open("C:/Users/user/Desktop/train/.vscode/TrainList.txt",'r')     # 기차 정보 들어있는 경로
+ticket = []           # 기차 정보 담아 올 리스트
+ticket_inf = []      # txt 파일에서 맨 윗줄 뺀 정보 담아올 리스트
+while True:
+    line = f.readline()
+    if not line: break
+    train_r = line.split()    # txt 문자열을 리스트로 받아옴
+    ticket.append(train_r)
+ticket.pop(0)         # txt 파일에서 맨 윗줄은 필요없는 정보
+       
+resind = []           # 예약할 기차 받아올 리스트
+ticket_inf = copy.deepcopy(ticket)     #기차정보 그대로 받아옴
+train_re = []
+train_re2 = []
+ticket_list1 = [605, 635, 715, 842]        # 06:05, 06:35, 07:15, 08:42 시간 리스트
+ticket_list2 = [365, 395, 435, 522]        # 위의 각 시간을 분으로 바꾼 리스트
+for i in range(20): 
+    del ticket_inf[i][2]
+    # 리스트에서 가로 2번째에 있는 정보는 화살표로 필요 없는 정보이기 때문에 삭제
+    ticket_inf[i][0] = ticket_inf[i][0].replace(":", "")
+    # 리스트에 가로 0번째 있는 정보중 : ' ' 는 필요없는 정보이기 때문에 삭제
+    ticket_inf[i][0] = int(ticket_inf[i][0])
+    # 리스트에 가로 0번째 시간 정보를 정수형으로 바꾸기
+           
+class travel:
+
+    def mainmenu(self):
+        while True:
+            print("1. 기차 예약하기")
+            print("2. 전체 기차 시간대")
+            print("3. 예약 현황, 예약 취소하기 ")
+            print("4. 프로그램 종료 ")
+            try:
+                menu = int(input("메뉴를 입력해주세요 : "))
+            except:
+                print("숫자를 입력하세요")
+                self.mainmenu()
+            if menu == 1:
+                self.menu1()
+            elif menu == 2:
+                self.menu2()
+            elif menu == 3:
+                self.menu3()
+            elif menu == 4:
+                print("프로그램을 종료합니다.")
+                break
+            else:
+                print ("다시 번호를 입력해주세요.")
+                return self.mainmenu()
+    def menu1(self):
+        
+        timing = []
+        abstime = []
+        
+        
+        
+        print(">>>예약 시, 예약 분, 출발역, 도착역, 열차종류를 입력해주세요.")
+        
+        print(">>>ex) h mm 서울 부산 KTX")
+        
+        ticketing = list(input("입력 : ").split())       # 입력한 정보 리스트로 변환하여 저장
+        thour = int(ticketing[0])             # 시간정보 저장
+        tminute = int(ticketing[1])           # 분 정보 저장
+        timing = thour * 60 + tminute          # 시간을 분으로 고치기
+        for i in range(4):
+            abstime.append(abs(timing-ticket_list2[i]))          
+            # 가까운 시간 찾기(분으로 고친 시간과 리스트2에 있는 시간 빼서 절대값이 제일 작은 것)
+        find_ind = abstime.index(min(abstime))
+        if tminute // 10 == 0:                # 시간이 한자리 수 일 경우 예외 처리
+            timee = str(thour)+"0"+str(tminute)    
+        else:
+            timee = str(thour)+str(tminute)
+        
+        
+        for j in range(20):
+            if ticket_list1[find_ind] == int(ticket_inf[j][0]) and ticketing[2] == ticket_inf[j][1] and ticketing[3] == ticket_inf[j][2] and ticketing[4] == ticket_inf[j][3]:
+                # 제일 가까운 시간 찾은 것 일치하면
+                print(ticket[j])    # 예약한 기차표 예약
+                while True:
+                    print("해당 기차표를 예매하시겠습니까? [Y/N]")
+                    reservation = input("입력 : ")
+                    
+                    if reservation == "Y":
+                        resind.append(j)      #resind 리스트에 예약한 티켓 세로번째 순서 저장
+                        if ticket[j][5] != "매진":       # 매진 아니면
+                            train_re.append(ticket[j])
+                            ticket[j][5] = int(ticket[j][5]) - 1  # 예약한 티켓 좌석수 한개 빼주기
+                            
+                            
+                            print("\n예매가 완료되었습니다.")
+                            self.mainmenu()
+                           
+                                
+                        else:             # 예약으로 인해 좌석수 0개 면 매진
+                            print("매진")
+                        
+                        
+                    elif reservation == "N":
+                        self.mainmenu()
+                return train_re
+                    
+    def menu2(self):
+        print("전체 기차 시간표를 출력하시겠습니까?")
+        print("원하시면 1를 눌러주세요.")
+        print("그렇지 않으면 메인메뉴로 돌아갑니다.")
+        alltime = int(input("입력 : "))
+        for k in range(20):
+            if ticket[k][5] == 0:
+                ticket[k][5] = "매진"
+        if alltime == 1:
+            i = 0
+            while i < len(ticket):
+                a, b, c, d, e, f = ticket[i]
+                print(a, b, c, d, e, f)
+                i += 1
+            print("\n")
+        
+            
+        else:
+            print("메인 메뉴로 돌아갑니다.")
+            self.mainmenu()
+    
+    def menu3(self):
+
+         if train_re == []:
+             print('\n예매된 기차가 없습니다.')
+         else:
+             print('======== 기차 정보 ========',sep='\n')
+             i = 0
+             while i < len(train_re):  # 반복할 때 리스트의 세로 번쨰 숫자 활용
+                 a,b,c,d,e,f = train_re[i]  
+                 print(a,b,c,d,e)
+                 i += 1
+             cancle = input('\n예매를 취소하시겠습니까? [Y/N]\n제일 최근에 예약된 표가 취소됩니다.\n입력 : ')
+             if cancle == 'Y':
+                 if ticket[resind[len(resind)-1]][5] == '매진':
+                     ticket[resind[len(resind)-1]][5] = 1
+                     train_re.pop()
+                 else:
+                     ticket[resind[len(resind)-1]][5] = ticket[resind[len(resind)-1]][5] + 1
+                     train_re.pop()
+                 resind.pop()
+                 print('\n취소가 완료되었습니다.')
+             else:
+                 print('\n처음 화면으로 돌아갑니다.')
+if __name__ == "__main__":
+    program = travel()
+    print(program.mainmenu())
